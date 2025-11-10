@@ -31,6 +31,12 @@ async function initDb() {
   await client.connect();
   db = client.db(process.env.DB_NAME || "ecoTrack");
 
+  // ---------- Ensure collections exist ----------
+  await db.createCollection("challenges").catch(() => {});
+  await db.createCollection("userChallenges").catch(() => {});
+  await db.createCollection("tips").catch(() => {});
+  await db.createCollection("events").catch(() => {});
+
   Collections.challenges = db.collection("challenges");
   Collections.userChallenges = db.collection("userChallenges");
   Collections.tips = db.collection("tips");
@@ -46,7 +52,7 @@ async function initDb() {
   await Collections.events.createIndex({ date: 1 });
   // geospatial indexes only if you use location fields:
 
-  console.log("✅ MongoDB connected and indexes ensured");
+  console.log("MongoDB connected and indexes ensured");
 }
 initDb().catch((err) => {
   console.error("Failed to initialize DB", err);
@@ -79,11 +85,9 @@ async function authMiddleware(req, res, next) {
 
   // If you want real firebase-admin verification, add logic here when configured.
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    return res
-      .status(401)
-      .json({
-        message: "Real Firebase verification not implemented in this template",
-      });
+    return res.status(401).json({
+      message: "Real Firebase verification not implemented in this template",
+    });
   }
 
   return res
@@ -135,7 +139,7 @@ function buildChallengeFilters(q) {
 const router = express.Router();
 
 /**
- * GET /api/challenges
+ * /challenges
  */
 router.get("/challenges", async (req, res) => {
   try {
@@ -157,13 +161,13 @@ router.get("/challenges", async (req, res) => {
 
     res.json({ page, limit, total, items });
   } catch (err) {
-    console.error("GET /challenges error", err);
+    console.error("/challenges error", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
 /**
- * GET /api/challenges/:id
+ * /challenges/:id
  */
 router.get("/challenges/:id", async (req, res) => {
   try {
@@ -174,13 +178,13 @@ router.get("/challenges/:id", async (req, res) => {
     if (!c) return res.status(404).json({ message: "Not found" });
     res.json(c);
   } catch (err) {
-    console.error("GET /challenges/:id", err);
+    console.error("/challenges/:id", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
 /**
- * POST /api/challenges  (protected)
+ * POST/challenges  (protected)
  */
 router.post("/challenges", authMiddleware, async (req, res) => {
   try {
@@ -229,7 +233,7 @@ router.post("/challenges", authMiddleware, async (req, res) => {
 });
 
 /**
- * PATCH /api/challenges/:id  (owner or admin)
+ * PATCH/challenges/:id  (owner or admin)
  */
 router.patch("/challenges/:id", authMiddleware, async (req, res) => {
   try {
@@ -271,7 +275,7 @@ router.patch("/challenges/:id", authMiddleware, async (req, res) => {
 });
 
 /**
- * DELETE /api/challenges/:id
+ * DELETE/challenges/:id
  */
 router.delete("/challenges/:id", authMiddleware, async (req, res) => {
   try {
@@ -301,18 +305,16 @@ router.delete("/challenges/:id", authMiddleware, async (req, res) => {
 });
 
 /**
- * POST /api/challenges/join/:id
+ * POST/challenges/join/:id
  */
 router.post("/challenges/join/:id", authMiddleware, async (req, res) => {
   if (!req.user) return res.status(401).json({ message: "Unauthorized" });
   const userId = req.user.id;
   if (!userId || !ObjectId.isValid(userId)) {
-    return res
-      .status(400)
-      .json({
-        message:
-          "Your mock-user token must include a valid ObjectId after colon (mock-user:<id>)",
-      });
+    return res.status(400).json({
+      message:
+        "Your mock-user token must include a valid ObjectId after colon (mock-user:<id>)",
+    });
   }
 
   const challengeId = req.params.id;
@@ -389,7 +391,7 @@ router.get("/tips", async (req, res) => {
       .toArray();
     res.json(tips);
   } catch (err) {
-    console.error("GET /tips", err);
+    console.error("/tips", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -409,7 +411,7 @@ router.get("/events", async (req, res) => {
   }
 });
 
-app.use("/api", router);
+app.use("/", router);
 
 // root
 app.get("/", (req, res) => {
