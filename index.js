@@ -184,7 +184,7 @@ router.get("/challenges/:id", async (req, res) => {
 });
 
 /**
- * POST/challenges  (protected)
+ * /challenges  (protected)
  */
 router.post("/challenges", authMiddleware, async (req, res) => {
   try {
@@ -225,7 +225,7 @@ router.post("/challenges", authMiddleware, async (req, res) => {
     const result = await Collections.challenges.insertOne(doc);
     res.status(201).json({ _id: result.insertedId, ...doc });
   } catch (err) {
-    console.error("POST /challenges", err);
+    console.error("/challenges", err);
     if (err.code === 11000)
       return res.status(409).json({ message: "Slug already exists" });
     res.status(500).json({ message: "Server error" });
@@ -233,7 +233,7 @@ router.post("/challenges", authMiddleware, async (req, res) => {
 });
 
 /**
- * PATCH/challenges/:id  (owner or admin)
+ * /challenges/:id  (owner or admin)
  */
 router.patch("/challenges/:id", authMiddleware, async (req, res) => {
   try {
@@ -269,13 +269,13 @@ router.patch("/challenges/:id", authMiddleware, async (req, res) => {
     );
     res.json(r.value);
   } catch (err) {
-    console.error("PATCH /challenges/:id", err);
+    console.error("/challenges/:id", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
 /**
- * DELETE/challenges/:id
+ * /challenges/:id
  */
 router.delete("/challenges/:id", authMiddleware, async (req, res) => {
   try {
@@ -299,13 +299,13 @@ router.delete("/challenges/:id", authMiddleware, async (req, res) => {
     await Collections.challenges.deleteOne({ _id: new ObjectId(id) });
     res.json({ message: "Deleted" });
   } catch (err) {
-    console.error("DELETE /challenges/:id", err);
+    console.error("/challenges/:id", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
 /**
- * POST/challenges/join/:id
+ * /challenges/join/:id
  */
 router.post("/challenges/join/:id", authMiddleware, async (req, res) => {
   if (!req.user) return res.status(401).json({ message: "Unauthorized" });
@@ -400,13 +400,13 @@ router.get("/events", async (req, res) => {
   try {
     const now = new Date();
     const events = await Collections.events
-      .find({ date: { $gte: now }, isPublic: true })
+      .find({})
       .sort({ date: 1 })
       .limit(4)
       .toArray();
     res.json(events);
   } catch (err) {
-    console.error("GET /events", err);
+    console.error("/events", err);
     res.status(500).json({ message: "Server error" });
   }
 });
